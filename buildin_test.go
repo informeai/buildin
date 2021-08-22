@@ -13,3 +13,21 @@ func TestNewBuild(t *testing.T) {
 	}
 	log.Println(b)
 }
+
+//go test -v -run ^TestVerifyOs
+func TestVerifyOs(t *testing.T) {
+	b, err := verifyOs("solaris")
+	if err != nil {
+		t.Errorf("TestVerifyOs(): got -> %v", err)
+	}
+	log.Println(b)
+}
+
+//go test -v -run ^TestVerifyArch
+func TestVerifyArch(t *testing.T) {
+	b, err := verifyArch("amd64")
+	if err != nil {
+		t.Errorf("TestVerifyArch(): got -> %v", err)
+	}
+	log.Println(b)
+}
