@@ -7,7 +7,7 @@ import (
 
 //go test -v -run ^TestNewBuild
 func TestNewBuild(t *testing.T) {
-	b := NewBuild("darwin", "amd64")
+	b := NewBuild()
 	if b == nil {
 		t.Errorf("TestNewBuild(): got -> %v, want: Build{}", b)
 	}
@@ -30,4 +30,13 @@ func TestVerifyArch(t *testing.T) {
 		t.Errorf("TestVerifyArch(): got -> %v", err)
 	}
 	log.Println(b)
+}
+
+//go test -v -run ^TestParseArgs
+func TestParseArgs(t *testing.T) {
+	b := NewBuild()
+	err := b.parseArgs()
+	if err != nil {
+		t.Errorf("TestParseArgs(): got -> %v", err)
+	}
 }
