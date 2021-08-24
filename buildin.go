@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"sync"
 )
 
 //Build is struct base of constructor commands.
