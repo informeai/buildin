@@ -40,3 +40,23 @@ func TestParseArgs(t *testing.T) {
 		t.Errorf("TestParseArgs(): got -> %v", err)
 	}
 }
+
+//go test -v -run ^TestCreateDir
+func TestCreateDir(t *testing.T) {
+	b := NewBuild()
+	b.inputDir = "../"
+	log.Println(b.outputDir)
+	err := b.createDir()
+	if err != nil {
+		t.Errorf("TestCreateDir(): got -> %v", err)
+	}
+}
+
+//go test -v -run ^TestRun
+func TestRun(t *testing.T) {
+	b := NewBuild()
+	err := b.Run()
+	if err != nil {
+		t.Errorf("TestRun(): got -> %v", err)
+	}
+}

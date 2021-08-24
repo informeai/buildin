@@ -3,18 +3,19 @@ package buildin
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
+	"sync"
 )
 
 //Build is struct base of constructor commands.
 type Build struct {
-	OS        string
-	Arch      string
-	inputDir  string
-	outputDir string
-	all       bool
+	OS   string
+	Arch string
+	all  bool
 }
 
 //errors
@@ -106,15 +107,8 @@ func verifyArch(arch string) (bool, error) {
 
 //parseArgs execute of parse the args from comand line.
 func (b *Build) parseArgs() error {
-	actualDir, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	out := filepath.Join(actualDir, "build")
 	os := flag.String("os", runtime.GOOS, "target operating system.")
 	arch := flag.String("arch", runtime.GOARCH, "destination architecture.")
-	input := flag.String("i", actualDir, "current directory for build.")
-	output := flag.String("o", out, "destination directory for build.")
 	all := flag.Bool("all", false, "build for everyone.")
 
 	flag.Parse()
@@ -124,12 +118,54 @@ func (b *Build) parseArgs() error {
 	b.OS = *os
 	b.Arch = *arch
 	b.all = *all
-	b.inputDir = *input
-	b.outputDir = *output
 	return nil
 }
 
-//Run executing of search by initial file in inputDir and build program.
+//createDir is responsable by create dir build for deposit executables.
+func (b *Build) createDir() error {
+	if _, err := os.Stat("dist"); os.IsNotExist(err) {
+		err = os.Mkdir("dist", 0755)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+//createParams return params for cmd command.
+func (b *Build) createParams() string {
+	var output string
+	osAndArch := fmt.Sprintf("GOOS=%v GOARCH=%v", b.OS, b.Arch)
+	input := "main.go"
+	if b.OS == "windows" {
+		output = filepath.Join("dist", fmt.Sprintf("%v_%v.exe", b.OS, b.Arch))
+	} else {
+		output = filepath.Join("dist", fmt.Sprintf("%v_%v", b.OS, b.Arch))
+	}
+	cmpParams := fmt.Sprintf("%v go build -o %v %v", osAndArch, output, input)
+	fmt.Printf("Build -> %v/%v.\n", b.OS, b.Arch)
+	return cmpParams
+}
+
+//start create binary of os and arch.
+func (b *Build) start() error {
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("start", b.createParams())
+	} else {
+		cmd = exec.Command("bash", "-c", b.createParams())
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+//Run executing of search by initial file from actual dir and build program.
 //eg. In programs of go the search (main.go) by default.
 func (b *Build) Run() error {
 	t, err := verifyOs(b.OS)
@@ -138,6 +174,21 @@ func (b *Build) Run() error {
 	}
 	t, err = verifyArch(b.Arch)
 	if t == false && err != nil {
+		return err
+	}
+
+	err = b.createDir()
+	if err != nil {
+		return err
+	}
+
+	err = b.parseArgs()
+	if err != nil {
+		return err
+	}
+
+	err = b.start()
+	if err != nil {
 		return err
 	}
 
