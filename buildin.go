@@ -14,7 +14,7 @@ import (
 type Build struct {
 	OS   string
 	Arch string
-	all  bool
+	help string
 }
 
 //errors
@@ -104,11 +104,24 @@ func verifyArch(arch string) (bool, error) {
 	return false, ErrArch
 }
 
+//usage return of help for commands.
+func usage() string {
+	return `Simple build all plataforms bynaries write in go.
+USAGE: buildin -os [OS] -arch [ARCH]
+ARGS:
+	-h      help commands.
+	-os    	target operating system.
+			eg. windows,linux,mac...
+	-arch   destination architecture.
+			eg. amd64, arm, ...
+`
+}
+
 //parseArgs execute of parse the args from comand line.
 func (b *Build) parseArgs() error {
 	os := flag.String("os", runtime.GOOS, "target operating system.")
 	arch := flag.String("arch", runtime.GOARCH, "destination architecture.")
-	all := flag.Bool("all", false, "build for everyone.")
+	help := flag.String("h", usage(), "help commands.")
 
 	flag.Parse()
 	if len(*os) == 0 || len(*arch) == 0 {
@@ -116,7 +129,7 @@ func (b *Build) parseArgs() error {
 	}
 	b.OS = *os
 	b.Arch = *arch
-	b.all = *all
+	b.help = *help
 	return nil
 }
 
@@ -174,6 +187,11 @@ func (b *Build) Run() error {
 	t, err = verifyArch(b.Arch)
 	if t == false && err != nil {
 		return err
+	}
+
+	if len(os.Args) < 4 || os.Args[1] == "-h" {
+		fmt.Println(usage())
+		os.Exit(0)
 	}
 
 	err = b.createDir()
